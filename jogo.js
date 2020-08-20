@@ -1,8 +1,12 @@
 console.log('Flappy bird');
 
-const sprites = new Image();
+let frames = 0;
 
+const sprites = new Image();
 sprites.src = 'assets/sprites.png';
+
+const hitSound = new Audio();
+hitSound.src = 'assets/effects/hit_sound.mp3';
 
 const canvas = document.querySelector('canvas');
 const context = canvas.getContext('2d');
@@ -36,15 +40,26 @@ const context = canvas.getContext('2d');
             
     }
 
-    const floor = {
-        spriteX: 0,
-        spriteY: 610,
-        width: 224,
-        height: 112,
-        X: 0,
-        Y: canvas.height - 112,
-        
-        draw (){
+    function createFloor() {
+        const floor = {
+            spriteX: 0,
+            spriteY: 610,
+            width: 224,
+            height: 112,
+            X: 0,
+            Y: canvas.height - 112,
+            update() {
+                if (colision(globais.flappyBird, globais.floor)){
+                    return;
+                }
+                const moviment = 1;
+                const floorReset = floor.width / 2;
+                floor.X = floor.X - moviment;
+                if(floor.X <= -112) {
+                    floor.X = floor.X + floorReset;
+                }
+            },
+            draw (){
                 context.drawImage(
                     sprites, 
                     floor.spriteX, floor.spriteY, // Sprite X e sprite Y
@@ -60,6 +75,8 @@ const context = canvas.getContext('2d');
                     floor.width, floor.height, // Tamnanho da sprite no canvas
                 );
             }
+        }
+        return floor;
     }
 
     const getReady = {
@@ -79,60 +96,124 @@ const context = canvas.getContext('2d');
             )
         }
     }
-        
-    const flappyBird = {
-        spriteX: 0,
-        spriteY: 0,
-        width: 33,
-        height: 24,
-        X: 10,
-        Y: 240,
-        speed: 0,
-        gravity: 0.35,
-        update() {
-            this.speed = this.speed + this.gravity;
-            flappyBird.Y = flappyBird.Y + this.speed;
-        },
-        draw (){
-            context.drawImage(
-                sprites, 
-                flappyBird.spriteX, flappyBird.spriteY, // Sprite X e sprite Y
-                flappyBird.width, flappyBird.height, // Tamanho do crop na sprite
-                flappyBird.X, flappyBird.Y, // Posicionamento dentro do canvas
-                flappyBird.width, flappyBird.height, // Tamnanho da sprite no canvas
-            );
+
+    function colision(flappyBird, floor){
+        const colisionFloor = flappyBird.Y + flappyBird.height;
+
+        if (colisionFloor >= floor.Y){
+            return true
         }
     }
 
+    function createFlappy(){
+        const flappyBird = {
+            spriteX: 0,
+            spriteY: 0,
+            width: 33,
+            height: 24,
+            X: 10,
+            Y: 200,
+            speed: 0,
+            gravity: 0.35,
+            jumpHeight: -4.6,
+            moves: [
+                { spriteX: 0, spriteY:0 },
+                { spriteX: 0, spriteY:26 },
+                { spriteX: 0, spriteY:52 }
+            ],
+            currentFrame: 0,
+            updateCurrentFrame() {
+                const frameRetitionInterval = 10
+                const intervalReached = frames % frameRetitionInterval == 0;
+                if(intervalReached){
+                    const incrementBase = 1;
+                    const increment = incrementBase + flappyBird.currentFrame;
+                    const repeat = flappyBird.moves.length;
+                    flappyBird.currentFrame = increment % repeat
+                }
+            },
+            jump() {
+                if(flappyBird.Y  > 0){
+                    this.speed = this.jumpHeight - 2.5
+                }else {
+                    console.log("Colisao");
+                    return;
+                }
+            },
+            update() {
+                if(colision(flappyBird, globais.floor)){
+                    console.log("Colisao");
+                    //hitSound.play();
+                    
+                    setTimeout(() => {
+                        changeScreen(screen.begin)
+                    }, 500)
+                    return;
+                }
+    
+                this.speed = this.speed + this.gravity;
+                flappyBird.Y = flappyBird.Y + this.speed;
+            },
+            draw (){
+                flappyBird.updateCurrentFrame();
+                const { spriteX, spriteY } = flappyBird.moves[flappyBird.currentFrame];
+
+                context.drawImage(
+                    sprites, 
+                    spriteX, spriteY, // Sprite X e sprite Y
+                    flappyBird.width, flappyBird.height, // Tamanho do crop na sprite
+                    flappyBird.X, flappyBird.Y, // Posicionamento dentro do canvas
+                    flappyBird.width, flappyBird.height, // Tamnanho da sprite no canvas
+                );
+            }
+        }
+        return flappyBird;
+    }
+
+    const globais = {};
+
     let activateScreen = {};
+
     function changeScreen(newScreen) {
         activateScreen = newScreen;
+
+        if (activateScreen.incialize) {
+            activateScreen.incialize();
+        }
     }
 
     const screen = {
         begin: {
+            incialize(){
+                globais.flappyBird = createFlappy()
+                globais.floor = createFloor();
+            },
             draw() {
                 background.draw(); // Desenha a imagem de fundo
-                floor.draw(); // Desenha o chao
-                flappyBird.draw();
+                globais.floor.draw(); // Desenha o chao
+                globais.flappyBird.draw();
                 getReady.draw();
-            },
-            update(){
-
             },
             click(){
                 changeScreen(screen.game);
+            },
+            update(){
+                globais.floor.update();
             }
         },
         game: {
             draw() {
                 background.draw(); // Desenha a imagem de fundo
-                floor.draw(); // Desenha o chao
-                flappyBird.draw();
+                globais.floor.draw(); // Desenha o chao
+                globais.flappyBird.draw();
+            },
+            click() {
+                globais.flappyBird.jump();
             },
             update() {
-                flappyBird.update()
-            }
+                globais.flappyBird.update()
+                globais.floor.update();
+            },
         }
     };
 
@@ -141,6 +222,7 @@ const context = canvas.getContext('2d');
         activateScreen.draw();
         activateScreen.update();
 
+        frames = frames + 1;
         requestAnimationFrame(loop);
     }
 
