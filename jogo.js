@@ -154,15 +154,15 @@ function createFlappy() {
     },
     jump() {
       if (flappyBird.Y > 0) {
-        this.speed = this.jumpHeight - 2.5;
+        this.speed = this.jumpHeight - 1.0;
       } else {
-        console.log("Colisao");
+        console.log("Perdeu");
         return;
       }
     },
     update() {
       if (colision(flappyBird, globais.floor)) {
-        console.log("Colisao");
+        console.log("Perdeu");
         //hitSound.play();
 
         setTimeout(() => {
@@ -242,18 +242,31 @@ function createPipes() {
                 pipes.width, pipes.height,
                 pipeFloorX, pipefloorY,
                 pipes.width, pipes.height
-            )
-        })
+            ),
 
+            pair.pipeHeaven = {
+              x: pipeHeaveX,
+              y: pipes.height + pipeHeaveY
+            },
+            pair.pipeFloor = {
+              x: pipeFloorX,
+              y: pipefloorY
+            }
+        })
     },
     colisionDetection(pair){
-        if(globais.flappyBird.X >= pair.x || globais.flappyBird.Y <= pair.y){
-            const fall = globais.floor.Y - globais.flappyBird.height;
-            globais.flappyBird.Y = fall;
-        }else {
-            return false
-        }
-        
+      const flappyHead = globais.flappyBird.Y;
+      const flappyFoot = globais.flappyBird.Y + globais.flappyBird.height;
+
+      if(globais.flappyBird.X >= pair.x){          
+          if(flappyHead <= pair.pipeHeaven.y) {
+            return true
+          }
+          if(flappyFoot >= pair.pipeFloor.y) {
+            return true
+          }
+      }
+      return false 
     },
     pair: [],
     update() {
@@ -273,7 +286,7 @@ function createPipes() {
                     pair.x = pair.x - 2;
 
                     if (pipes.colisionDetection(pair)){
-                        console.log("You lose")
+                        changeScreen(screen.begin);
                     }
     
                     if(pair.x <= -50){
