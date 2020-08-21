@@ -321,6 +321,9 @@ const screen = {
     click() {
       changeScreen(screen.game);
     },
+    keypress() {
+      changeScreen(screen.game);
+    },
     update() {
       globais.floor.update();
       globais.pipe.update()
@@ -334,6 +337,9 @@ const screen = {
       globais.flappyBird.draw();
     },
     click() {
+      globais.flappyBird.jump();
+    },
+    keypress() {
       globais.flappyBird.jump();
     },
     update() {
@@ -355,6 +361,12 @@ function loop() {
 window.addEventListener("click", function () {
   if (activateScreen.click) {
     activateScreen.click();
+  }
+});
+
+window.addEventListener("keypress", function () {
+  if (activateScreen.keypress) {
+    activateScreen.keypress();
   }
 });
 
