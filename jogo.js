@@ -163,7 +163,7 @@ function createFlappy() {
     update() {
       if (colision(flappyBird, globais.floor)) {
         console.log("Perdeu");
-        //hitSound.play();
+        hitSound.play();
 
         setTimeout(() => {
           changeScreen(screen.begin);
