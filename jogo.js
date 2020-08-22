@@ -134,7 +134,7 @@ function createFlappy() {
     X: 10,
     Y: 200,
     speed: 0,
-    gravity: 0.35,
+    gravity: 0.5,
     jumpHeight: -4.6,
     moves: [
       { spriteX: 0, spriteY: 0 },
@@ -292,11 +292,6 @@ function createPipes() {
                     if(pair.x <= -50){
                         pipes.pair.shift()
                     }
-                })
-            }else {
-                pipes.pair.push({
-                    x: canvas.width - 55,
-                    y: yRandomGetReady
                 })
             }
         }
